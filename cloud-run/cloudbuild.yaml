@@ -1,0 +1,34 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-cache'
+    entrypoint: 'bash'
+    args: ['-c', 'docker pull gcr.io/central-ops-datamart-4fe3/ops-test:latest || exit 0']
+  
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build'
+    args: [
+      'build', 
+      '-t', 'gcr.io/central-ops-datamart-4fe3/ops-test', 
+      '--cache-from', 'gcr.io/central-ops-datamart-4fe3/ops-test:latest', 
+      '.'
+    ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push'
+    args: ['push', 'gcr.io/central-ops-datamart-4fe3/ops-test']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'ops-datamart-change-management-cloud-run-service'
+    - '--image'
+    - 'gcr.io/central-ops-datamart-4fe3/ops-test'
+    - '--region'
+    - 'australia-southeast1'
+    - '--platform'
+    - 'managed'
+images:
+  - 'gcr.io/central-ops-datamart-4fe3/ops-test'
